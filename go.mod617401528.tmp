@@ -1,0 +1,11 @@
+module github.com/CanobbioE/please-safely-strore-this
+
+go 1.13
+
+require (
+	github.com/atotto/clipboard v0.1.2
+	github.com/howeyc/gopass v0.0.0-20190910152052-7cb4b85ec19c
+	github.com/otiai10/copy v1.0.2
+	golang.org/x/crypto v0.0.0-20200206161412-a0c6ece9d31a
+	google.golang.org/api v0.16.0 // indirect
+)

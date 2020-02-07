@@ -15,19 +15,44 @@ const usage = `Usage:
 	psst --config [-d DIRECTORY]
 
 Options:
-	-n, --new                       Store or update a set of credentials, expects to be used with --account and --username and/or --password.
-	-r, --remove                    Remove a credentials set, expects to be used with --account.
-	-a, --account ACCOUNT           Specify the ACCOUNT's value, to be used with --new or --remove or alone.
-	-p, --password PASSWORD         Specify the path to the file containing the password in clear, to be used with --new.
-	-u, --username USERNAME         Specify the USERNAME's value, to be used with --new.
-	-c, --config                    Configure the command.
-	-d, --directory                 Specify the path to the DIRECTORY into which store/read the encrypted credentials, to be used with --config.
-	-h, --help                      Show this message.
+	-n, --new
+		Used with -a/--account ACCOUNT and at least one between -p/--password PASSWORD
+		and -u/--username USERNAME:
+		creates a new credentials file at <default_directory>/.psst/.<ACCOUNT>,
+		if the destination already exists it updates it with the given USERNAME and/or PASSWORD.
 
-DIRECTORY defaults to ~/.psst in no other definition is found in the current environment.
+	-r, --remove
+		Used with -a/--account ACCOUNT:
+		remove a credentials file by deleting the file at <default_directory>/.psst/.<ACCOUNT>
 
-Calls with no OPTIONS retrieve the credentials for the given ACCOUNT.
+	-a, --account ACCOUNT
+		Used with -n/--new or -r/--r:
+		specify the ACCOUNT onto which the operation is gonna take effect.
+		Used by itself:
+		retrive the ACCOUNT credentials.
 
+	-p, --password PASSWORD
+		Used with -n/--new:
+		specify the path to the file from which the PASSWORD will be read
+		and saved into the credentials file.
+		The path can be both in Unix and in Windows format.
+
+	-u, --username USERNAME
+		Used with -n/--new:
+		specify the USERNAME's value to be saved into the credentials file.
+
+	-c, --config
+		Used with -d/--directory:
+		configure psst options.
+
+	-d, --directory
+		Used with -c/--config:
+		specify the path to the DIRECTORY used to store the credentials file.
+		The path could be both in Unix or in Windows format.
+		The default path is <user_home>/.psst/
+
+	-h, --help
+		Show an helpful and well formatted message. :)
 
 Example:
 	$ psst -n -a grandma_instagram -p ./password.txt -u example@example.com

@@ -17,7 +17,7 @@ import (
 func createOrUpdateCredentials(account, user, pathToPassword string) {
 	updating, err := fileutils.Exists(cfg.DefaultDir + "/.account")
 	if err != nil {
-		log.Fatalf("Error checking for credentials existence: %v")
+		log.Fatalf("Error checking for credentials existence: %v", err)
 	}
 	switch {
 	case updating:

@@ -1,4 +1,4 @@
-# Please Safely Strore This (PSST)
+# Please Safely Store This (PSST)
 Psst is a password manager. There are many password managers out there but I wanted to create my own.
 
 (Yes I did it only because I came up with the pun name)

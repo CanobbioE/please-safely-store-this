@@ -3,6 +3,7 @@ package prompt
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -13,6 +14,7 @@ import (
 // See https://github.com/golang/go/issues/34612
 func ForSecret(prompt string) (string, error) {
 	fmt.Print(prompt)
+	terminal.MakeRaw(int(syscall.Stdin))
 	t := terminal.NewTerminal(os.Stdin, "")
 	bytePassphrase, err := t.ReadPassword("")
 	fmt.Println("")

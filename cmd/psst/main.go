@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/CanobbioE/please-safely-strore-this/pkg/fileutils"
+	"github.com/CanobbioE/please-safely-store-this/pkg/fileutils"
 )
 
 const usage = `Usage:

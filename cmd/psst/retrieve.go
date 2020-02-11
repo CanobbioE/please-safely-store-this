@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/CanobbioE/please-safely-strore-this/pkg/cryptoutils"
-	"github.com/CanobbioE/please-safely-strore-this/pkg/prompt"
+	"github.com/CanobbioE/please-safely-store-this/pkg/cryptoutils"
+	"github.com/CanobbioE/please-safely-store-this/pkg/prompt"
 	"github.com/atotto/clipboard"
 )
 

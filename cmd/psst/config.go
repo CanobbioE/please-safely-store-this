@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/CanobbioE/please-safely-strore-this/pkg/fileutils"
+	"github.com/CanobbioE/please-safely-store-this/pkg/fileutils"
 	_dir "github.com/otiai10/copy"
 )
 

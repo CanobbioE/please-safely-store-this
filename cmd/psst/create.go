@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/CanobbioE/please-safely-strore-this/pkg/cryptoutils"
-	"github.com/CanobbioE/please-safely-strore-this/pkg/fileutils"
-	"github.com/CanobbioE/please-safely-strore-this/pkg/prompt"
+	"github.com/CanobbioE/please-safely-store-this/pkg/cryptoutils"
+	"github.com/CanobbioE/please-safely-store-this/pkg/fileutils"
+	"github.com/CanobbioE/please-safely-store-this/pkg/prompt"
 )
 
 // createOrUpdateCredentials calls createCredentials if there is no entry

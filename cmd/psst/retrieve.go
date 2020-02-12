@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -19,7 +20,7 @@ func retrieveCredentials(account string) {
 	username, encryptedPassword := readCredentialsFromFile(path)
 
 	// Ask user for passphrase
-	passphrase, err := prompt.ForSecret("Encryption passphrase:")
+	passphrase, err := prompt.ForSecret(os.Stdin, "Encryption passphrase:")
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
 	}

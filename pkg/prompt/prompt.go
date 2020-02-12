@@ -2,20 +2,21 @@ package prompt
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-// ForSecret asks the user for a secret input using the provided prompt.
+// ForSecret asks, on the specified stream,
+// for a secret input using the provided prompt.
 // The secret is not displayed while typed and it is not echoed
 // after it is entered, on most terminals.
 // See https://github.com/golang/go/issues/34612
-func ForSecret(prompt string) (string, error) {
+func ForSecret(stream *os.File, prompt string) (string, error) {
 	fmt.Print(prompt)
-	terminal.MakeRaw(int(syscall.Stdin))
-	t := terminal.NewTerminal(os.Stdin, "")
+	terminal.MakeRaw(int(stream.Fd()))
+	t := terminal.NewTerminal(io.ReadWriter(stream), "")
 	bytePassphrase, err := t.ReadPassword("")
 	fmt.Println("")
 	if err != nil {
@@ -24,20 +25,21 @@ func ForSecret(prompt string) (string, error) {
 	return string(bytePassphrase), nil
 }
 
-// WithConfirm keeps asking the user for a secret input and a confirmation input
+// WithConfirm keeps asking on the specified stream,
+// for a secret input and a confirmation input
 // untill the two inputs are equal.
 // If the two inputs do not match the onMismatch function is called.
 // The secrets are not displayed while typed and they are not echoed
 // after they are entered, on most terminals.
 // See https://github.com/golang/go/issues/34612
-func WithConfirm(promptEnter, promptConfirm string, onMismatch func()) (string, error) {
+func WithConfirm(stream *os.File, promptEnter, promptConfirm string, onMismatch func()) (string, error) {
 repeat:
-	enter, err := ForSecret(promptEnter)
+	enter, err := ForSecret(stream, promptEnter)
 	if err != nil {
 		return enter, err
 	}
 
-	confirm, err := ForSecret(promptConfirm)
+	confirm, err := ForSecret(stream, promptConfirm)
 	if err != nil {
 		return enter, err
 	}

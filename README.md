@@ -3,6 +3,16 @@ Psst is a password manager. There are many password managers out there but I wan
 
 (Yes I did it only because I came up with the pun name)
 
+## Installation
+Binaries are provided [here](https://github.com/CanobbioE/please-safely-store-this/releases).
+
+Or you can use Go CLI
+```bash
+$ go get github.com/CanobbioE/please-safely-store-this
+
+$ go install ./CanobbioE/please-safely-store-this/cmd/
+```
+
 ## Usage
 ```
 Usage:

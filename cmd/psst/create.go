@@ -66,7 +66,7 @@ func updateCredentials(account, user, pathToPassword string) {
 // standard input
 func encryptPassword(password string) string {
 	onMismatch := func() { log.Infof("Passphrases do not match.") }
-	passphrase, err := prompt.WithConfirm(os.Stdin, "Encryption passphrase:", "Confirm passphrase:", onMismatch)
+	passphrase, err := prompt.WithConfirm(os.Stdin, os.Stdout, "Encryption passphrase:", "Confirm passphrase:", onMismatch)
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
 	}

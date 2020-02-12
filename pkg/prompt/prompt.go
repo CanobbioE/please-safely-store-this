@@ -1,8 +1,8 @@
 package prompt
 
 import (
+	"bufio"
 	"fmt"
-	"io"
 	"os"
 
 	"golang.org/x/crypto/ssh/terminal"
@@ -13,12 +13,15 @@ import (
 // The secret is not displayed while typed and it is not echoed
 // after it is entered, on most terminals.
 // See https://github.com/golang/go/issues/34612
-func ForSecret(stream *os.File, prompt string) (string, error) {
-	fmt.Print(prompt)
-	terminal.MakeRaw(int(stream.Fd()))
-	t := terminal.NewTerminal(io.ReadWriter(stream), "")
+func ForSecret(in, out *os.File, prompt string) (string, error) {
+	terminal.MakeRaw(int(in.Fd()))
+	rw := bufio.NewReadWriter(bufio.NewReader(in), bufio.NewWriter(out))
+	t := terminal.NewTerminal(rw, "")
+
+	fmt.Fprintf(out, prompt)
 	bytePassphrase, err := t.ReadPassword("")
-	fmt.Println("")
+	fmt.Fprintf(out, "\n")
+
 	if err != nil {
 		return string(bytePassphrase), err
 	}
@@ -32,14 +35,14 @@ func ForSecret(stream *os.File, prompt string) (string, error) {
 // The secrets are not displayed while typed and they are not echoed
 // after they are entered, on most terminals.
 // See https://github.com/golang/go/issues/34612
-func WithConfirm(stream *os.File, promptEnter, promptConfirm string, onMismatch func()) (string, error) {
+func WithConfirm(in, out *os.File, promptEnter, promptConfirm string, onMismatch func()) (string, error) {
 repeat:
-	enter, err := ForSecret(stream, promptEnter)
+	enter, err := ForSecret(in, out, promptEnter)
 	if err != nil {
 		return enter, err
 	}
 
-	confirm, err := ForSecret(stream, promptConfirm)
+	confirm, err := ForSecret(in, out, promptConfirm)
 	if err != nil {
 		return enter, err
 	}

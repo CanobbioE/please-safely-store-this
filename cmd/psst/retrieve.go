@@ -20,7 +20,7 @@ func retrieveCredentials(account string) {
 	username, encryptedPassword := readCredentialsFromFile(path)
 
 	// Ask user for passphrase
-	passphrase, err := prompt.ForSecret(os.Stdin, "Encryption passphrase:")
+	passphrase, err := prompt.ForSecret(os.Stdin, os.Stdout, "Encryption passphrase:")
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
 	}

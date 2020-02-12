@@ -7,8 +7,6 @@ import (
 	"hash/fnv"
 )
 
-var iv = []byte{35, 46, 57, 24, 85, 35, 24, 74, 87, 35, 88, 98, 66, 32, 14, 05}
-
 // GenerateKey32 hashes the given secret into a 32byte key.
 // It uses fnv which is not a cryptographic hash function.
 func GenerateKey32(secret string) string {
@@ -44,12 +42,12 @@ func Decrypt(key, text string) (string, error) {
 
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
-		panic(err.Error())
+		return "", err
 	}
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		panic(err.Error())
+		return "", err
 	}
 	nonce := []byte(key)[:aesgcm.NonceSize()]
 

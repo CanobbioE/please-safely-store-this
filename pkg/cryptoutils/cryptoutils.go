@@ -3,7 +3,6 @@ package cryptoutils
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"encoding/base64"
 	"fmt"
 	"hash/fnv"
 )
@@ -19,41 +18,45 @@ func GenerateKey32(secret string) string {
 }
 
 // Encrypt takes a 32byte (128bit) key and a plain text.
-// The key is used to encrypt the text using crypto/cipher
+// The key is used to encrypt the text using authenticated encryption
 func Encrypt(key, text string) (string, error) {
+	plaintext := []byte(text)
 	block, err := aes.NewCipher([]byte(key))
 	if err != nil {
 		return "", err
 	}
-	plaintext := []byte(text)
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	ciphertext := make([]byte, len(plaintext))
-	cfb.XORKeyStream(ciphertext, plaintext)
-	return encodeBase64(ciphertext), nil
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return "", err
+	}
+	nonce := []byte(key)[:aesgcm.NonceSize()]
+
+	ciphertext := aesgcm.Seal(nil, nonce, plaintext, nil)
+	return string(ciphertext), nil
+
 }
 
 // Decrypt takes a 32byte (128bit) key and a plain text.
-// The key is used to deencrypt the text using crypto/cipher
+// The key is used to decrypt the text using authenticated encryption
 func Decrypt(key, text string) (string, error) {
+	ciphertext := []byte(text)
+
 	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		panic(err.Error())
+	}
+
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	nonce := []byte(key)[:aesgcm.NonceSize()]
+
+	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
 		return "", err
 	}
-	ciphertext := decodeBase64(text)
-	cfb := cipher.NewCFBEncrypter(block, iv)
-	plaintext := make([]byte, len(ciphertext))
-	cfb.XORKeyStream(plaintext, ciphertext)
+
 	return string(plaintext), nil
-}
-
-func encodeBase64(b []byte) string {
-	return base64.StdEncoding.EncodeToString(b)
-}
-
-func decodeBase64(s string) []byte {
-	data, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		panic(err)
-	}
-	return data
 }

@@ -2,12 +2,12 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"log"
+	_log "log"
 	"os"
 	"path/filepath"
 
 	"github.com/CanobbioE/please-safely-store-this/pkg/fileutils"
+	"github.com/fatih/color"
 )
 
 const usage = `Usage:
@@ -76,6 +76,26 @@ const DEFAULTDIR = "/.psst"
 
 var cfg ConfigOptions
 
+type PrintfFunc func(msg string, args ...interface{})
+type Logger struct {
+	Fatalf, Warnf, Infof PrintfFunc
+}
+
+var log = Logger{
+	Fatalf: func(msg string, args ...interface{}) {
+		_log.Printf(msg, args...)
+		_log.Fatalf("Run psst --help to read the usage notes.")
+	},
+	Infof: func(msg string, args ...interface{}) {
+		_log.Printf(msg, args...)
+	},
+	Warnf: func(msg string, args ...interface{}) {
+		color.Set(color.FgHiYellow)
+		_log.Printf(msg, args...)
+		color.Unset()
+	},
+}
+
 func main() {
 	// Set default dir
 	savedDir := os.Getenv("PSSTDIR")
@@ -85,13 +105,13 @@ func main() {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			home = "./"
-			log.Println("Error deriving user home directory, " +
-				"creating one in the current directory")
+			log.Warnf("Error deriving user home directory, " +
+				"creating one in the current directory\n")
 		}
 		savedDir = filepath.FromSlash(home + DEFAULTDIR)
 	}
 
-	onCreation := func() { log.Printf("Created default directory at %s", savedDir) }
+	onCreation := func() { log.Infof("Created default directory at %s\n", savedDir) }
 	fileutils.CreateIfDoesntExist(savedDir, onCreation)
 
 	cfg = ConfigOptions{
@@ -99,7 +119,7 @@ func main() {
 	}
 
 	// Handle flags
-	flag.Usage = func() { fmt.Fprintf(os.Stderr, "%s\n", usage) }
+	flag.Usage = func() { log.Infof("%s\n", usage) }
 	var (
 		configFlag, newFlag, removeFlag                        bool
 		accountFlag, usernameFlag, passwordFlag, directoryFlag string

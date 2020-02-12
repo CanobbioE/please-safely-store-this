@@ -1,9 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -34,9 +34,11 @@ func retrieveCredentials(account string) {
 	// Copy password to clipboard
 	if runtime.GOOS == "linux" {
 		if !commandExists("xclip") && !commandExists("xsel") {
-			log.Println("Copying to clipboard might fail, consider installing xclip or xsel.")
+			log.Warnf("Copying to clipboard might fail, consider installing xclip or xsel.\n")
 		}
 	}
+	b := bytes.Trim([]byte(password), "\000")
+	log.Infof(string(b))
 	if err := clipboard.WriteAll(password); err != nil {
 		log.Fatalf("Error copying password to clipboard: %v", err)
 	}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 
@@ -21,7 +20,7 @@ func configurePsst(path string) {
 	path = filepath.FromSlash(path)
 
 	// Create the folder if it doesn't exist
-	onCreation := func() { log.Printf("Created directory at %s\n", path) }
+	onCreation := func() { log.Infof("Created directory at %s\n", path) }
 	if err := fileutils.CreateIfDoesntExist(path, onCreation); err != nil {
 		log.Fatalf("Error while creating the direcory %s: %v", path, err)
 	}
@@ -30,7 +29,7 @@ func configurePsst(path string) {
 	if err := _dir.Copy(cfg.DefaultDir, path); err != nil {
 		log.Fatalf("Error while copying files to the new directory: %v", err)
 	}
-	log.Printf("Copied all files from %s to %s\n", cfg.DefaultDir, path)
+	log.Infof("Copied all files from %s to %s\n", cfg.DefaultDir, path)
 
 	// Change settings
 	os.Setenv("PSSTDIR", path)

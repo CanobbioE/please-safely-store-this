@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 )
@@ -16,5 +15,5 @@ func removeCredentials(account string) {
 		log.Fatalf("Error removing credentials for %s: %v", account, err)
 	}
 
-	log.Printf("Removed %s", path)
+	log.Infof("Removed %s", path)
 }

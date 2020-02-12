@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -45,7 +44,7 @@ func createCredentials(account, user, pathToPassword string) {
 // If only one between password and user is specified,
 // that's what is going to be updated.
 func updateCredentials(account, user, pathToPassword string) {
-	log.Println("A file for the specified account already exists, updating!")
+	log.Infof("A file for the specified account already exists, updating!")
 	if pathToPassword == "" && user == "" {
 		log.Fatalf("Error: at least one between -p/--password and -u/--user must be specified when updating with -n/--new.")
 	}
@@ -66,7 +65,7 @@ func updateCredentials(account, user, pathToPassword string) {
 // encryptPassword returns the password encrypted using the secret read from
 // standard input
 func encryptPassword(password string) string {
-	onMismatch := func() { log.Printf("Passphrases do not match.") }
+	onMismatch := func() { log.Infof("Passphrases do not match.") }
 	passphrase, err := prompt.WithConfirm("Encryption passphrase:", "Confirm passphrase:", onMismatch)
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
@@ -111,5 +110,5 @@ func deleteInputPasswordFile(pathToPassword string) {
 func _createOrUpdate(account, user, password string) {
 	path := fmt.Sprintf("%s/.%s", cfg.DefaultDir, account)
 	writeCredentialsToFile(user, password, path)
-	log.Printf("Added credential for user %s at %s\n", user, path)
+	log.Infof("Added credential for user %s at %s\n", user, path)
 }

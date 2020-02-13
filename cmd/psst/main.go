@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	_log "log"
 
 	"github.com/CanobbioE/please-safely-store-this/pkg/fileutils"
@@ -86,7 +87,7 @@ func main() {
 	fileutils.CreateIfDoesntExist(DEFAULTDIR, onCreation)
 
 	// Handle flags
-	flag.Usage = func() { log.Infof("%s\n", usage) }
+	flag.Usage = func() { fmt.Printf("%s\n", usage) }
 	var (
 		newFlag, removeFlag                     bool
 		accountFlag, usernameFlag, passwordFlag string

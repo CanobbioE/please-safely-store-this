@@ -1,7 +1,7 @@
 # Please Safely Store This (PSST)
 Psst is a password manager. There are many password managers out there but I wanted to create my own.
 
-(Yes I did it only because I came up with the pun name)
+(Yes I did it only because I came up with the fun acronym)
 
 ## Installation
 Binaries are provided [here](https://github.com/CanobbioE/please-safely-store-this/releases).
@@ -46,16 +46,6 @@ Options:
 		Used with -n/--new:
 		specify the USERNAME's value to be saved into the credentials file.
 
-	-c, --config
-		Used with -d/--directory:
-		configure psst options.
-
-	-d, --directory
-		Used with -c/--config:
-		specify the path to the DIRECTORY used to store the credentials file.
-		The path could be both in Unix or in Windows format.
-		The default path is <user_home>/.psst/
-
 	-h, --help
 		Show an helpful and well formatted message. :)
 
@@ -65,14 +55,11 @@ Example:
 	Confirm passphrase:
 	Added credential for user example@example.com at ~/.psst/.grandma_instagram
 
-	$ psst --config -d ~/myFolder
-	Moved all the credentials from ~/.psst to ~/myFolder
-
 	$ psst -a grandma_instagram
 	Encryption passphrase:
 	User: example@example.com
 	Password copied to clipboard
 
 	$ psst -r -a grandma_instagram
-	Removed ~/myFolder/.grandma_instagram
+	Removed ~/.psst/.grandma_instagram
 ```

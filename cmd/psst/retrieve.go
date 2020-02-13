@@ -13,7 +13,7 @@ import (
 // It decrypts the credentials file and prints the username to standard output.
 // The password is copied in the system's clipboard, ready to be pasted anywhere.
 func retrieveCredentials(account string) {
-	path := fmt.Sprintf("%s%s.%s", cfg.DefaultDir, string(filepath.Separator), account)
+	path := fmt.Sprintf("%s%s.%s", DEFAULTDIR, string(filepath.Separator), account)
 
 	username, password := decryptCredentialsFile(path)
 
@@ -27,6 +27,7 @@ func retrieveCredentials(account string) {
 	if err := clipboard.WriteAll(string(b)); err != nil {
 		log.Fatalf("Error copying password to clipboard: %v", err)
 	}
-	fmt.Printf("User: %s\n", username)
 
+	log.Infof("User: %s\n", username)
+	log.Infof("Password copied to clipboard")
 }

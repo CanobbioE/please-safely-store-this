@@ -12,7 +12,7 @@ import (
 // createOrUpdateCredentials calls createCredentials if there is no entry
 // for the given account, otherwise it calls updateCredentials
 func createOrUpdateCredentials(account, user, pathToPassword string) {
-	updating, err := fileutils.Exists(cfg.DefaultDir + "/.account")
+	updating, err := fileutils.Exists(DEFAULTDIR + "/.account")
 	if err != nil {
 		log.Fatalf("Error checking for credentials existence: %v", err)
 	}
@@ -47,7 +47,7 @@ func updateCredentials(account, user, pathToPassword string) {
 		log.Fatalf("Error: at least one between -p/--password and -u/--user must be specified when updating with -n/--new.")
 	}
 
-	pathToCredentials := fmt.Sprintf("%s%s.%s", cfg.DefaultDir, string(filepath.Separator), account)
+	pathToCredentials := fmt.Sprintf("%s%s.%s", DEFAULTDIR, string(filepath.Separator), account)
 	username, password := decryptCredentialsFile(pathToCredentials)
 
 	switch {
@@ -63,7 +63,7 @@ func updateCredentials(account, user, pathToPassword string) {
 // _createOrUpdate creates or update an account with the given credentials
 // It encrypts the username and the password before saving them to file
 func _createOrUpdate(account, user, password string) {
-	pathToCredentials := filepath.FromSlash(fmt.Sprintf("%s/.%s", cfg.DefaultDir, account))
+	pathToCredentials := filepath.FromSlash(fmt.Sprintf("%s/.%s", DEFAULTDIR, account))
 	fileContent := fmt.Sprintf("%s\n%s", user, password)
 
 	encryptedFileContent := encryptText(fileContent)

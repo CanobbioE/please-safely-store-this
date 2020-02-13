@@ -39,7 +39,7 @@ func deletedFile(pathToPassword string) {
 // decryptText returns the given text decrypted using the secret
 // that the user provides from standard input.
 func decryptText(text string) string {
-	passphrase, err := prompt.ForSecret(os.Stdin, os.Stdout, "Encryption passphrase:")
+	passphrase, err := prompt.ForSecret().On(os.Stdin, os.Stdout).DoPrompt("Encryption passphrase:")
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
 	}
@@ -57,7 +57,9 @@ func decryptText(text string) string {
 // that the user provides from standard input.
 func encryptText(text string) string {
 	onMismatch := func() { log.Infof("Passphrases do not match.") }
-	passphrase, err := prompt.WithConfirm(os.Stdin, os.Stdout, "Encryption passphrase:", "Confirm passphrase:", onMismatch)
+	p := prompt.ForSecret().On(os.Stdin, os.Stdout)
+	p = p.WithConfirm("Encryption passphrase:", "Confirm passphrase:", onMismatch)
+	passphrase, err := p.DoPrompt("")
 	if err != nil {
 		log.Fatalf("Error reading input: %v", err)
 	}

@@ -47,7 +47,7 @@ func decryptText(text string) string {
 	key := cryptoutils.GenerateKey32(passphrase)
 	plaintext, err := cryptoutils.Decrypt(key, text)
 	if err != nil {
-		log.Fatalf("Error encrypting password: %v", err)
+		log.Fatalf("Error decrypting text: %v", err)
 	}
 
 	return plaintext
@@ -85,4 +85,19 @@ func decryptCredentialsFile(path string) (string, string) {
 
 	lines := strings.Split(plaintext, "\n")
 	return lines[0], lines[1]
+}
+
+// userWantsToContinue
+func userWantsToContinue(msg string) bool {
+	expected := []string{"yes", "no", "y", "n"}
+	onMismatch := func() { log.Infof("Please enter any of %s, %s, %s, %s.", expected) }
+
+	p := prompt.ForConfirmation()
+	p = p.Expecting(expected, msg, onMismatch)
+	in, err := p.DoPrompt("")
+	if err != nil {
+		log.Fatalf("Error reading input: %v", err)
+	}
+
+	return strings.Contains(in, "y")
 }

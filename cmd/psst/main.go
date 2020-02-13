@@ -91,10 +91,10 @@ func main() {
 	// Handle flags
 	var newFlag, removeFlag bool
 	var accountFlag, usernameFlag, passwordFlag string
-	flag.BoolVar(&newFlag, "n", false, "create or update credentials")
-	flag.BoolVar(&newFlag, "new", false, "create or update a set of credentials")
-	flag.BoolVar(&removeFlag, "r", false, "remove a set of credentials")
-	flag.BoolVar(&removeFlag, "remove", false, "remove a set of credentials")
+	flag.BoolVar(&newFlag, "n", false, "create or update mode")
+	flag.BoolVar(&newFlag, "new", false, "create or update a mode")
+	flag.BoolVar(&removeFlag, "r", false, "remove mode")
+	flag.BoolVar(&removeFlag, "remove", false, "remove mode")
 	flag.StringVar(&usernameFlag, "u", "", "username's value")
 	flag.StringVar(&usernameFlag, "username", "", "username's value")
 	flag.StringVar(&passwordFlag, "p", "", "password's value")

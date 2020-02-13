@@ -55,6 +55,7 @@ Example:
 	Password copied to clipboard
 
 	$ psst -r -a grandma_instagram
+	You are about to delete ~/.psst/.grandma_instagram, are you sure? (y/n) yes
 	Removed ~/.psst/.grandma_instagram
 `
 

@@ -12,7 +12,8 @@ import (
 // createOrUpdateCredentials calls createCredentials if there is no entry
 // for the given account, otherwise it calls updateCredentials
 func createOrUpdateCredentials(account, user, pathToPassword string) {
-	updating, err := fileutils.Exists(DEFAULTDIR + "/.account")
+	pathToCredentials := fmt.Sprintf("%s%s.%s", DEFAULTDIR, string(filepath.Separator), account)
+	updating, err := fileutils.Exists(pathToCredentials)
 	if err != nil {
 		log.Fatalf("Error checking for credentials existence: %v", err)
 	}
@@ -43,12 +44,19 @@ func createCredentials(account, user, pathToPassword string) {
 // that's what is going to be updated.
 func updateCredentials(account, user, pathToPassword string) {
 	log.Infof("A credentials file for the specified account already exists, updating!")
+	pathToCredentials := fmt.Sprintf("%s%s.%s", DEFAULTDIR, string(filepath.Separator), account)
 	if pathToPassword == "" && user == "" {
 		log.Fatalf("Error: at least one between -p/--password and -u/--user must be specified when updating with -n/--new.")
 	}
 
-	pathToCredentials := fmt.Sprintf("%s%s.%s", DEFAULTDIR, string(filepath.Separator), account)
+	msg := fmt.Sprintf("Do you want to update %v? (y/n) ", pathToCredentials)
+	if !userWantsToContinue(msg) {
+		return
+	}
+
 	username, password := decryptCredentialsFile(pathToCredentials)
+	log.Infof("Succesfully decrypted old file!")
+	log.Infof("You can now change or keep the old passphrase.")
 
 	switch {
 	case pathToPassword != "":

@@ -86,13 +86,10 @@ func main() {
 	onCreation := func() { log.Infof("Created default directory at %s\n", DEFAULTDIR) }
 	fileutils.CreateIfDoesntExist(DEFAULTDIR, onCreation)
 
-	// Handle flags
 	flag.Usage = func() { fmt.Printf("%s\n", usage) }
-	var (
-		newFlag, removeFlag                     bool
-		accountFlag, usernameFlag, passwordFlag string
-	)
-
+	// Handle flags
+	var newFlag, removeFlag bool
+	var accountFlag, usernameFlag, passwordFlag string
 	flag.BoolVar(&newFlag, "n", false, "create or update credentials")
 	flag.BoolVar(&newFlag, "new", false, "create or update a set of credentials")
 	flag.BoolVar(&removeFlag, "r", false, "remove a set of credentials")

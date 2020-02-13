@@ -21,10 +21,10 @@ func ForSecret(in, out *os.File, prompt string) (string, error) {
 	fmt.Fprintf(out, prompt)
 	bytePassphrase, err := t.ReadPassword("")
 	fmt.Fprintf(out, "\n")
-
 	if err != nil {
 		return string(bytePassphrase), err
 	}
+
 	return string(bytePassphrase), nil
 }
 
@@ -46,10 +46,10 @@ repeat:
 	if err != nil {
 		return enter, err
 	}
-
 	if string(enter) != string(confirm) {
 		onMismatch()
 		goto repeat
 	}
+
 	return string(enter), nil
 }

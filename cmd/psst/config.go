@@ -32,7 +32,7 @@ func configurePsst(path string) {
 	log.Infof("Copied all files from %s to %s\n", cfg.DefaultDir, path)
 
 	// Delete the old folder
-	if err := os.Remove(cfg.DefaultDir); err != nil {
+	if err := os.RemoveAll(cfg.DefaultDir); err != nil {
 		log.Warnf("Couldn't remove old folder %s: %v", cfg.DefaultDir, err)
 	}
 

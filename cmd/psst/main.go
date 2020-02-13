@@ -138,8 +138,8 @@ func main() {
 	flag.StringVar(&passwordFlag, "password", "", "password's value")
 	flag.StringVar(&accountFlag, "a", "", "account's name")
 	flag.StringVar(&accountFlag, "account", "", "account's name")
-	flag.StringVar(&directoryFlag, "d", cfg.DefaultDir, "default directory's value")
-	flag.StringVar(&directoryFlag, "directory", cfg.DefaultDir, "default directory's value")
+	flag.StringVar(&directoryFlag, "d", "", "default directory's value")
+	flag.StringVar(&directoryFlag, "directory", "", "default directory's value")
 	flag.Parse()
 
 	// Check flags correctness

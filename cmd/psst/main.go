@@ -68,7 +68,9 @@ type Logger struct {
 
 var log = Logger{
 	Fatalf: func(msg string, args ...interface{}) {
+		color.Set(color.FgHiRed)
 		_log.Printf(msg, args...)
+		color.Unset()
 		_log.Printf("If you feel like you need a refresh, try running psst --help to read the usage notes.")
 		_log.Fatalf("If the error is something unexpected, please open an issue on CanobbioE/please-safely-store-this.")
 	},

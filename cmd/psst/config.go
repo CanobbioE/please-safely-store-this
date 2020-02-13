@@ -27,9 +27,14 @@ func configurePsst(path string) {
 
 	// Move everything from the old direcrory to the new one
 	if err := _dir.Copy(cfg.DefaultDir, path); err != nil {
-		log.Fatalf("Error while copying files to the new directory: %v", err)
+		log.Fatalf("Error while copying files from %s to %s : %v", err, cfg.DefaultDir, path)
 	}
 	log.Infof("Copied all files from %s to %s\n", cfg.DefaultDir, path)
+
+	// Delete the old folder
+	if err := os.Remove(cfg.DefaultDir); err != nil {
+		log.Warnf("Couldn't remove old folder %s: %v", cfg.DefaultDir, err)
+	}
 
 	// Change settings
 	os.Setenv("PSSTDIR", path)

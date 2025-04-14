@@ -1,65 +1,132 @@
 # Please Safely Store This (PSST)
-Psst is a password manager. There are many password managers out there but I wanted to create my own.
+A secure command-line password manager written in Go.
 
-(Yes I did it only because I came up with the fun acronym)
+(Yes, I did this only because I came up with the fun acronym)
+
+## Key Features
+- Secure local password storage
+- AES-256 encryption
+- Command-line interface for easy access
+- Password generation
+- Organization with tags
+- Clipboard integration
 
 ## Installation
+
+### Binaries
 Binaries are provided [here](https://github.com/CanobbioE/please-safely-store-this/releases).
 
-Or you can use Go CLI
-```bash
-$ go get github.com/CanobbioE/please-safely-store-this
+### From Source
+1. Clone the repository
+   ```
+   git clone https://github.com/yourusername/passmanager.git
+   cd passmanager
+   ```
 
-$ go install ./CanobbioE/please-safely-store-this/cmd/
-```
+2. Build the project
+   ```
+   go build -o passmanager
+   ```
+
+   Or use the build script to build for multiple platforms:
+   ```
+   chmod +x build.sh
+   ./build.sh
+   ```
+
+3. Install (optional)
+   ```
+   go install
+   ```
 
 ## Usage
+
 ```
 Usage:
-	psst [-n | -r] -a ACCOUNT [-p PASSWORD, -u USERNAME]
-	psst --config [-d DIRECTORY]
+  psst [command]
 
-Options:
-	-n, --new
-		Used with -a/--account ACCOUNT and at least one between -p/--password PASSWORD
-		and -u/--username USERNAME:
-		creates a new credentials file at <default_directory>/.psst/.<ACCOUNT>,
-		if the destination already exists it updates it with the given USERNAME and/or PASSWORD.
+Available Commands:
+  add         Add a new password entry
+  completion  Generate the autocompletion script for the specified shell
+  delete      Delete a password entry
+  get         Retrieve a password
+  help        Help about any command
+  init        Initialize the password vault
+  list        List all password entries
+  update      Update an existing password
 
-	-r, --remove
-		Used with -a/--account ACCOUNT:
-		remove a credentials file by deleting the file at <default_directory>/.psst/.<ACCOUNT>
+Flags:
+      --config string   config file (default is $HOME/.psst/config.yaml)
+  -h, --help            help for psst
+  -v, --verbose         enable verbose output
 
-	-a, --account ACCOUNT
-		Used with -n/--new or -r/--r:
-		specify the ACCOUNT onto which the operation is gonna take effect.
-		Used by itself:
-		retrive the ACCOUNT credentials.
-
-	-p, --password PASSWORD
-		Used with -n/--new:
-		specify the path to the file from which the PASSWORD will be read
-		and saved into the credentials file.
-		The path can be both in Unix and in Windows format.
-
-	-u, --username USERNAME
-		Used with -n/--new:
-		specify the USERNAME's value to be saved into the credentials file.
-
-	-h, --help
-		Show an helpful and well formatted message. :)
-
-Example:
-	$ psst -n -a grandma_instagram -p ./password.txt -u example@example.com
-	Encryption passphrase:
-	Confirm passphrase:
-	Added credential for user example@example.com at ~/.psst/.grandma_instagram
-
-	$ psst -a grandma_instagram
-	Encryption passphrase:
-	User: example@example.com
-	Password copied to clipboard
-
-	$ psst -r -a grandma_instagram
-	Removed ~/.psst/.grandma_instagram
 ```
+
+### Common Use Cases
+
+**Password Storage**
+```
+  psst add --service github --username dev@example.com --tags work,dev
+  Enter password (or generate with -g): 
+  Password stored in encrypted local vault.
+```
+
+**Password Retrieval**
+```
+  psst get gmail
+```
+
+**Update Existing Password**
+```
+  psst update gmail --password newSecurePass456
+```
+
+**List All Services**
+```
+  psst list
+```
+
+**Search for Specific Services**
+```
+  psst search google
+```
+
+**Copy Password to Clipboard**
+```
+  psst copy gmail
+  Password copied to clipboard. Will clear in 30 seconds.
+```
+
+**Generate Strong Password**
+```
+  psst generate --length 16 --special-chars
+```
+
+**Export/Backup Passwords**
+```
+  psst export --file backup.enc
+```
+
+**Backup storage**
+```
+  psst backup --location ~/backups/
+  Encrypted backup created at ~/backups/psst_backup_2025-04-14.enc
+```
+
+**Customize storage location**
+```
+  config set storage.path /path/to/custom/location/vault.db
+  Storage location updated. Existing data will be migrated.
+```
+
+## Security Notes
+
+- Passwords never leave your machine except for explicit exports
+- The master password is never stored, only its hash
+- Memory is securely wiped after use
+
+## Roadmap
+Many new features are yet to come, check our [roadmap](roadmap.md).
+
+## License
+[MIT](LICENSE)

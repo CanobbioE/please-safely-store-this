@@ -1,0 +1,231 @@
+---
+version: '2'
+linters:
+    enable:
+        # Default
+        - errcheck
+        - govet
+        - ineffassign
+        - staticcheck
+        - unused
+
+        # Extra
+        - asasalint
+        - asciicheck
+        - bidichk
+        - bodyclose
+        - containedctx
+        - contextcheck #yaml_line:disable
+        - copyloopvar
+        - dogsled
+        - dupword
+        - durationcheck
+        - errchkjson
+        - errorlint #yaml_line:disable
+        - forbidigo
+        - ginkgolinter
+        - gocheckcompilerdirectives
+        - gocritic #yaml_line:disable
+        - godot
+        - goheader
+        - gosec
+        - gosmopolitan
+        - grouper
+        - inamedparam
+        - intrange
+        - lll
+        - loggercheck
+        - makezero
+        - mirror
+        - nakedret
+        - nestif #yaml_line:disable
+        - nilerr #yaml_line:disable
+        - noctx
+        - nolintlint #yaml_line:disable
+        - nosprintfhostport
+        - perfsprint
+        - predeclared
+        - protogetter
+        - reassign
+        - revive
+        - rowserrcheck
+        - sqlclosecheck
+        - testifylint
+        - testpackage
+        - unconvert
+        - usestdlibvars
+        - wastedassign
+        - whitespace
+
+    settings:
+        lll:
+            line-length: 120
+
+        staticcheck:
+            checks:
+                - all
+
+        forbidigo:
+            forbid:
+                - pattern: ^(fmt\.Print(|f|ln)|print|println)$
+
+        gosec:
+            excludes:
+                - G104 # Unhandled errors - is checked by revive.unhandled-error with some exceptions
+                - G115 # Integer overflow by conversion
+
+        govet:
+            enable-all: true #yaml_line:disable
+
+        gocritic:
+            enabled-tags:
+                - diagnostic
+                - style
+                - performance
+                - experimental
+                - opinionated
+            disabled-checks:
+                - whyNoLint # Is checked by nolintlint with excluding lll much easier
+                - deferInLoop # Checked by revive already
+                - dupBranchBody # Checked by revive already
+
+        nakedret:
+            max-func-lines: 8 # Counting also declaration, not just body
+
+        nolintlint:
+            allow-no-explanation: [lll]
+            require-explanation: true
+            require-specific: true
+
+        exhaustive:
+            check:
+                - switch
+                - map
+            default-signifies-exhaustive: true
+
+        revive:
+            rules:
+                # Default
+                - name: blank-imports
+                - name: context-as-argument
+                - name: context-keys-type
+                - name: dot-imports
+                - name: empty-block
+                - name: error-naming
+                - name: error-return
+                - name: error-strings
+                - name: errorf
+                - name: exported #yaml_line:disable
+                  arguments: [checkPublicInterface] #yaml_line:disable
+                - name: increment-decrement
+                - name: indent-error-flow
+                - name: package-comments
+                - name: range
+                - name: receiver-naming
+                - name: redefines-builtin-id
+                - name: superfluous-else
+                - name: time-naming
+                - name: unexported-return #yaml_line:disable
+                - name: unreachable-code
+                - name: unused-parameter #yaml_line:disable
+                - name: var-declaration
+                - name: var-naming #yaml_line:disable
+
+                # Extra
+                - name: atomic
+                - name: bool-literal-in-expr
+                - name: comment-spacings
+                - name: confusing-naming #yaml_line:disable
+                - name: confusing-results #yaml_line:disable
+                - name: constant-logical-expr
+                - name: cyclomatic
+                  arguments: [30]
+                - name: datarace
+                - name: deep-exit
+                - name: defer
+                - name: duplicated-imports
+                - name: early-return #yaml_line:disable
+                - name: empty-lines #yaml_line:disable
+                - name: get-return
+                - name: identical-branches
+                - name: if-return #yaml_line:disable
+                - name: import-alias-naming
+                  arguments:
+                      - ^([a-z][a-z0-9]{0,}|\.)$
+                - name: import-shadowing
+                - name: modifies-parameter
+                - name: modifies-value-receiver
+                - name: nested-structs
+                - name: optimize-operands-order
+                - name: range-val-address
+                - name: range-val-in-closure
+                - name: redundant-import-alias
+                - name: string-of-int
+                - name: struct-tag
+                - name: time-equal
+                - name: unconditional-recursion
+                - name: unexported-naming #yaml_line:disable
+                - name: unhandled-error # It is OK not to check errors from some specific cases
+                  arguments:
+                      - (?i)fmt\.(F|S)?Print(ln|f)?
+                      - (bytes\.Buffer|strings\.Builder)\.Write(Byte|String|Rune)?
+                - name: unnecessary-stmt #yaml_line:disable
+                - name: unused-receiver #yaml_line:disable
+                - name: use-any #yaml_line:disable
+                - name: useless-break
+                - name: waitgroup-by-value
+
+        usestdlibvars:
+            default-rpc-path: true
+            sql-isolation-level: true
+
+    exclusions:
+        paths:
+            - third_party$
+            - builtin$
+            - examples$
+        generated: strict
+        rules:
+            # Ignore FieldAlignment in tests.
+            - linters:
+                  - govet
+              text: '^fieldalignment:'
+              path: .*_test.go
+
+
+            # Dupword checks for multiple words in comment or text, which sometimes happen.
+            - linters:
+                  - dupword
+              text: Duplicate words \(END\) found
+
+            # Do not enforce doc block on const/func/structs etc. in test files and test package.
+            - linters:
+                  - revive
+                  - staticcheck
+              text: '^(exported|SA1019):'
+              path: .*_test.go
+
+
+issues:
+    max-issues-per-linter: 0
+    max-same-issues: 0
+
+formatters:
+    enable:
+        - gci
+        - gofmt
+    settings:
+        gci:
+            # Keep in sync with Makefile
+            sections:
+                - standard
+                - default
+                - prefix(github.com/CanobbioE/please-safely-store-this/internal/pkg/config)
+                - blank
+                - dot
+    exclusions:
+        generated: strict
+        paths:
+            - third_party$
+            - builtin$
+            - examples$

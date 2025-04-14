@@ -1,4 +1,8 @@
 # Please Safely Store This (PSST)
+[![codecov](https://codecov.io/gh/CanobbioE/please-safely-store-this/graph/badge.svg?token=RADIN079TT)](https://codecov.io/gh/CanobbioE/please-safely-store-this)
+[![Go Report Card](https://goreportcard.com/badge/github.com/CanobbioE/please-safely-store-this)](https://goreportcard.com/report/github.com/CanobbioE/please-safely-store-this)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/CanobbioE/please-safely-store-this/tree/master.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/CanobbioE/please-safely-store-this/tree/master)
+
 A secure command-line password manager written in Go.
 
 (Yes, I did this only because I came up with the fun acronym)
@@ -19,19 +23,13 @@ Binaries are provided [here](https://github.com/CanobbioE/please-safely-store-th
 ### From Source
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/passmanager.git
-   cd passmanager
+   git clone https://github.com/CanobbioE/please-safely-store-this.git
+   cd please-safely-store-this
    ```
 
 2. Build the project
    ```
-   go build -o passmanager
-   ```
-
-   Or use the build script to build for multiple platforms:
-   ```
-   chmod +x build.sh
-   ./build.sh
+   go build -o psst
    ```
 
 3. Install (optional)

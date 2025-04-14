@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  go: circleci/go@1.7
+  go: circleci/go@3.0.2
   codecov: codecov/codecov@5
 
 commands:
@@ -10,7 +10,7 @@ commands:
     steps:
       - checkout
       - go/install:
-          version: '1.22'
+          version: '1.23.6'
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -19,7 +19,6 @@ commands:
           name: Install Dependencies
           command: |
             go mod download
-            go install github.com/mattn/go-sqlite3@latest
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
@@ -28,7 +27,7 @@ commands:
 executors:
   go-executor:
     docker:
-      - image: cimg/go:1.23
+      - image: cimg/go:1.23.6
     environment:
       CGO_ENABLED: 1
       GOOS: linux
@@ -46,8 +45,7 @@ jobs:
             go test -race -coverprofile=coverage.txt -covermode=atomic ./...
       - store_test_results:
           path: /tmp/test-results
-      - codecov/upload:
-          file: coverage.txt
+      - codecov/upload
 
   lint:
     executor: go-executor
@@ -55,12 +53,10 @@ jobs:
       - setup_environment
       - run:
           name: Install Linters
-          command: |
-            go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          command: make install-tools
       - run:
           name: Run Linters
-          command: |
-            make lint
+          command: make lint
 
   build:
     executor: go-executor
@@ -69,10 +65,10 @@ jobs:
       - run:
           name: Build Binary
           command: |
-            go build -o bin/passmanager ./main.go
+            go build -o bin/psst ./main.go
       - store_artifacts:
-          path: bin/passmanager
-          destination: passmanager
+          path: bin/psst
+          destination: psst
 
   release:
     executor: go-executor
@@ -86,9 +82,9 @@ jobs:
           name: Build Release Artifacts
           command: |
             mkdir -p dist
-            CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o dist/passmanager-linux-amd64 ./main.go
-            CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o dist/passmanager-darwin-amd64 ./main.go
-            CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o dist/passmanager-windows-amd64.exe ./main.go
+            CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o dist/psst-linux-amd64 ./main.go
+            CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o dist/psst-darwin-amd64 ./main.go
+            CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o dist/psst-windows-amd64.exe ./main.go
       # Create GitHub release if this is a tag
       - run:
           name: Create GitHub Release

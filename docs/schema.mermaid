@@ -1,0 +1,30 @@
+erDiagram
+    PASSWORD_ENTRIES {
+        integer id PK "Autoincrement"
+        text service "Unique, Not Null"
+        text username "Nullable"
+        text password "Not Null (Encrypted)"
+        text url "Nullable"
+        text notes "Nullable"
+        timestamp created_at "Not Null"
+        timestamp modified_at "Not Null"
+        timestamp last_used_at "Nullable"
+    }
+
+    TAGS {
+        integer id PK "Autoincrement"
+        integer entry_id FK "References password_entries.id"
+        text tag "Not Null"
+    }
+    
+    VAULT_METADATA {
+        text key PK "Primary Key"
+        text value "Not Null"
+    }
+    
+    PASSWORD_ENTRIES ||--o{ TAGS : has
+    
+    %% Indexes on the schema
+    %% Unique index on password_entries(service)
+    %% Index on tags(entry_id)
+    %% Index on tags(tag)

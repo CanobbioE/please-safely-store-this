@@ -1,0 +1,131 @@
+version: 2.1
+
+orbs:
+  go: circleci/go@1.7
+  codecov: codecov/codecov@3.2.4
+
+commands:
+  setup_environment:
+    description: "Setup the environment for testing and building"
+    steps:
+      - checkout
+      - go/install:
+          version: '1.22'
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+            - go-mod-v1-
+      - run:
+          name: Install Dependencies
+          command: |
+            go mod download
+            go install github.com/mattn/go-sqlite3@latest
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - /go/pkg/mod
+
+executors:
+  go-executor:
+    docker:
+      - image: cimg/go:1.23
+    environment:
+      CGO_ENABLED: 1
+      GOOS: linux
+      GOARCH: amd64
+
+jobs:
+  test:
+    executor: go-executor
+    steps:
+      - setup_environment
+      - run:
+          name: Run Tests with Coverage
+          command: |
+            mkdir -p /tmp/test-results
+            go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - store_test_results:
+          path: /tmp/test-results
+      - codecov/upload:
+          file: coverage.txt
+
+  lint:
+    executor: go-executor
+    steps:
+      - setup_environment
+      - run:
+          name: Install Linters
+          command: |
+            go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - run:
+          name: Run Linters
+          command: |
+            make lint
+
+  build:
+    executor: go-executor
+    steps:
+      - setup_environment
+      - run:
+          name: Build Binary
+          command: |
+            go build -o bin/passmanager ./main.go
+      - store_artifacts:
+          path: bin/passmanager
+          destination: passmanager
+
+  release:
+    executor: go-executor
+    steps:
+      - setup_environment
+      - run:
+          name: Install GoReleaser
+          command: |
+            go install github.com/goreleaser/goreleaser@latest
+      - run:
+          name: Build Release Artifacts
+          command: |
+            mkdir -p dist
+            CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o dist/passmanager-linux-amd64 ./main.go
+            CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o dist/passmanager-darwin-amd64 ./main.go
+            CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o dist/passmanager-windows-amd64.exe ./main.go
+      # Create GitHub release if this is a tag
+      - run:
+          name: Create GitHub Release
+          command: |
+            if [[ $CIRCLE_TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+              goreleaser release --skip-validate --rm-dist
+            else
+              echo "Not a release tag, skipping release"
+            fi
+      - store_artifacts:
+          path: dist
+          destination: binaries
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - lint:
+          filters:
+            tags:
+              only: /.*/
+      - test:
+          filters:
+            tags:
+              only: /.*/
+      - build:
+          requires:
+            - lint
+            - test
+          filters:
+            tags:
+              only: /.*/
+      - release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v[0-9]+\.[0-9]+\.[0-9]+$/

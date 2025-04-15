@@ -1,7 +1,8 @@
+// Package psst contains all the base commands for the Please Safely Store This tool.
 package psst
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -11,46 +12,42 @@ import (
 )
 
 var cfgFile string
+
 var cfg *config.Config
 
-// RootCmd represents the base command when called without any subcommands
-var RootCmd = &cobra.Command{
-	Use:   "psst",
-	Short: "A secure password manager CLI",
-	Long: `A secure command-line password manager that stores your passwords
+// RootCmd represents the base command when called without any subcommands.
+func RootCmd() *cobra.Command {
+	cobra.OnInitialize(initConfig)
+	cmd := &cobra.Command{
+		Use:   "psst",
+		Short: "A secure password manager CLI",
+		Long: `A secure command-line password manager that stores your passwords
 locally in an encrypted database. Your passwords never leave your machine
 except when you explicitly export them.`,
-}
-
-// Execute adds all child commands to the root command and sets flags appropriately.
-func init() {
-	cobra.OnInitialize(initConfig)
-
-	// Global flags
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.psst/config.yaml)")
-	RootCmd.PersistentFlags().BoolP("verbose", "v", false, "enable verbose output")
-
-	// Add commands
-	RootCmd.AddCommand(addCmd)
-	RootCmd.AddCommand(getCmd)
-	RootCmd.AddCommand(listCmd)
-	RootCmd.AddCommand(updateCmd)
-	RootCmd.AddCommand(deleteCmd)
-	RootCmd.AddCommand(initCmd)
+	}
+	cmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.psst/config.yaml)")
+	cmd.PersistentFlags().BoolP("verbose", "v", false, "enable verbose output")
+	cmd.AddCommand(AddCmd())
+	cmd.AddCommand(GetCmd())
+	cmd.AddCommand(ListCmd())
+	cmd.AddCommand(UpdateCmd())
+	cmd.AddCommand(DeleteCmd())
+	cmd.AddCommand(InitCmd())
+	return cmd
 }
 
 func initConfig() {
 	// If config file is specified, use it
 	if cfgFile != "" {
-		// Use config file from the flag
 		cfg = config.LoadConfig(cfgFile)
+		log.Printf("Using config: %+v", cfg) // TODO: remove
 		return
 	}
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		fmt.Println("Error finding home directory:", err)
-		os.Exit(1)
+		log.Println("Error finding home directory:", err)
+		return
 	}
 
 	// Default config location
@@ -59,10 +56,10 @@ func initConfig() {
 
 	// Create config directory if it doesn't exist
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		err := os.MkdirAll(configDir, 0700)
+		err := os.MkdirAll(configDir, 0o700)
 		if err != nil {
-			fmt.Println("Error creating config directory:", err)
-			os.Exit(1)
+			log.Printf("Error creating config directory: %v", err)
+			return
 		}
 	}
 

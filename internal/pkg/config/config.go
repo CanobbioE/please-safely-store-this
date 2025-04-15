@@ -1,7 +1,8 @@
+// Package config handles the application configuration.
 package config
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -9,37 +10,33 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Config holds the application configuration
+// Config holds the application configuration.
 type Config struct {
 	DBPath              string        `yaml:"db_path"`
+	BackupDir           string        `yaml:"backup_dir"`
 	AutoLockTimeout     time.Duration `yaml:"auto_lock_timeout"`
 	ClipboardTimeout    time.Duration `yaml:"clipboard_timeout"`
-	ShowPasswords       bool          `yaml:"show_passwords"` // Whether to show passwords in plain text
-	BackupDir           string        `yaml:"backup_dir"`
-	BackupCount         int           `yaml:"backup_count"` // Number of backups to keep
+	BackupCount         int           `yaml:"backup_count"`
 	PasswordLength      int           `yaml:"password_length"`
+	MinPasswordStrength int           `yaml:"min_password_strength"`
+	ShowPasswords       bool          `yaml:"show_passwords"`
 	UseSpecialChars     bool          `yaml:"use_special_chars"`
 	UseNumbers          bool          `yaml:"use_numbers"`
 	UseUppercase        bool          `yaml:"use_uppercase"`
-	MinPasswordStrength int           `yaml:"min_password_strength"` // 0-4, 0 = no minimum
 }
 
-// DefaultConfig returns a new Config with default values
+// DefaultConfig returns a new Config with default values.
 func DefaultConfig() *Config {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		home = "."
 	}
-
-	defaultDBPath := filepath.Join(home, ".psst", "vault.db")
-	defaultBackupDir := filepath.Join(home, ".psst", "backups")
-
 	return &Config{
-		DBPath:              defaultDBPath,
+		DBPath:              filepath.Join(home, ".psst", "vault.db"),
 		AutoLockTimeout:     15 * time.Minute,
 		ClipboardTimeout:    30 * time.Second,
 		ShowPasswords:       false,
-		BackupDir:           defaultBackupDir,
+		BackupDir:           filepath.Join(home, ".psst", "backups"),
 		BackupCount:         5,
 		PasswordLength:      16,
 		UseSpecialChars:     true,
@@ -49,40 +46,38 @@ func DefaultConfig() *Config {
 	}
 }
 
-// LoadConfig loads config from file or creates a default one
+// LoadConfig loads config from file or creates a default one.
 func LoadConfig(path string) *Config {
 	config := DefaultConfig()
 
-	// Check if config file exists
+	// Check if config file exists and create it if it doesn't exist
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		// Create default config file
-		if err := saveConfig(config, path); err != nil {
-			fmt.Printf("Error creating default config: %s\n", err)
+		if err := SaveConfig(config, path); err != nil {
+			log.Printf("Error creating default config: %s\n", err)
 		}
 		return config
 	}
 
-	// Read config file
+	//nolint:gosec // this is safe
 	data, err := os.ReadFile(path)
 	if err != nil {
-		fmt.Printf("Error reading config file: %s\n", err)
+		log.Printf("Error reading config file: %s\n", err)
 		return config
 	}
 
-	// Parse YAML
-	if err := yaml.Unmarshal(data, config); err != nil {
-		fmt.Printf("Error parsing config file: %s\n", err)
+	if err = yaml.Unmarshal(data, config); err != nil {
+		log.Printf("Error parsing config file: %s\n", err)
 		return config
 	}
 
 	return config
 }
 
-// SaveConfig saves the config to file
-func saveConfig(config *Config, path string) error {
+// SaveConfig saves the config to file.
+func SaveConfig(config *Config, path string) error {
 	// Create directory if it doesn't exist
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
 
@@ -93,5 +88,5 @@ func saveConfig(config *Config, path string) error {
 	}
 
 	// Write to file
-	return os.WriteFile(path, data, 0600)
+	return os.WriteFile(path, data, 0o600)
 }

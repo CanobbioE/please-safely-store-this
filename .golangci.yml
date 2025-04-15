@@ -15,17 +15,17 @@ linters:
         - bidichk
         - bodyclose
         - containedctx
-        - contextcheck #yaml_line:disable
+        - contextcheck
         - copyloopvar
         - dogsled
         - dupword
         - durationcheck
         - errchkjson
-        - errorlint #yaml_line:disable
+        - errorlint
         - forbidigo
         - ginkgolinter
         - gocheckcompilerdirectives
-        - gocritic #yaml_line:disable
+        - gocritic
         - godot
         - goheader
         - gosec
@@ -38,19 +38,17 @@ linters:
         - makezero
         - mirror
         - nakedret
-        - nestif #yaml_line:disable
-        - nilerr #yaml_line:disable
+        - nestif
+        - nilerr
         - noctx
-        - nolintlint #yaml_line:disable
+        - nolintlint
         - nosprintfhostport
         - perfsprint
         - predeclared
-        - protogetter
         - reassign
         - revive
         - rowserrcheck
         - sqlclosecheck
-        - testifylint
         - testpackage
         - unconvert
         - usestdlibvars
@@ -75,7 +73,7 @@ linters:
                 - G115 # Integer overflow by conversion
 
         govet:
-            enable-all: true #yaml_line:disable
+            enable-all: true
 
         gocritic:
             enabled-tags:
@@ -115,8 +113,8 @@ linters:
                 - name: error-return
                 - name: error-strings
                 - name: errorf
-                - name: exported #yaml_line:disable
-                  arguments: [checkPublicInterface] #yaml_line:disable
+                - name: exported
+                  arguments: [checkPublicInterface]
                 - name: increment-decrement
                 - name: indent-error-flow
                 - name: package-comments
@@ -125,18 +123,18 @@ linters:
                 - name: redefines-builtin-id
                 - name: superfluous-else
                 - name: time-naming
-                - name: unexported-return #yaml_line:disable
+                - name: unexported-return
                 - name: unreachable-code
-                - name: unused-parameter #yaml_line:disable
+                - name: unused-parameter
                 - name: var-declaration
-                - name: var-naming #yaml_line:disable
+                - name: var-naming
 
                 # Extra
                 - name: atomic
                 - name: bool-literal-in-expr
                 - name: comment-spacings
-                - name: confusing-naming #yaml_line:disable
-                - name: confusing-results #yaml_line:disable
+                - name: confusing-naming
+                - name: confusing-results
                 - name: constant-logical-expr
                 - name: cyclomatic
                   arguments: [30]
@@ -144,11 +142,11 @@ linters:
                 - name: deep-exit
                 - name: defer
                 - name: duplicated-imports
-                - name: early-return #yaml_line:disable
-                - name: empty-lines #yaml_line:disable
+                - name: early-return
+                - name: empty-lines
                 - name: get-return
                 - name: identical-branches
-                - name: if-return #yaml_line:disable
+                - name: if-return
                 - name: import-alias-naming
                   arguments:
                       - ^([a-z][a-z0-9]{0,}|\.)$
@@ -164,14 +162,14 @@ linters:
                 - name: struct-tag
                 - name: time-equal
                 - name: unconditional-recursion
-                - name: unexported-naming #yaml_line:disable
+                - name: unexported-naming
                 - name: unhandled-error # It is OK not to check errors from some specific cases
                   arguments:
                       - (?i)fmt\.(F|S)?Print(ln|f)?
                       - (bytes\.Buffer|strings\.Builder)\.Write(Byte|String|Rune)?
-                - name: unnecessary-stmt #yaml_line:disable
-                - name: unused-receiver #yaml_line:disable
-                - name: use-any #yaml_line:disable
+                - name: unnecessary-stmt
+                - name: unused-receiver
+                - name: use-any
                 - name: useless-break
                 - name: waitgroup-by-value
 
@@ -198,7 +196,7 @@ linters:
                   - dupword
               text: Duplicate words \(END\) found
 
-            # Do not enforce doc block on const/func/structs etc. in test files and test package.
+            # Do not enforce doc block on const/func/structs etc. in test files.
             - linters:
                   - revive
                   - staticcheck
@@ -220,7 +218,7 @@ formatters:
             sections:
                 - standard
                 - default
-                - prefix(github.com/CanobbioE/please-safely-store-this/internal/pkg/config)
+                - prefix(github.com/CanobbioE/please-safely-store-this/)
                 - blank
                 - dot
     exclusions:

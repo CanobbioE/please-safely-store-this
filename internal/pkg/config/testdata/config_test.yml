@@ -1,0 +1,11 @@
+db_path: mock_db_path
+backup_dir: mock_backup_dir
+auto_lock_timeout: 1m
+clipboard_timeout: 1s
+backup_count: 42
+password_length: 42
+min_password_strength: 42
+show_passwords: true
+use_special_chars: true
+use_numbers: true
+use_uppercase: true

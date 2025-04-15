@@ -1,52 +1,56 @@
+// Package db handles storing data to sqlite.
 package db
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // blank import here is common practice
 )
 
-// Database represents the SQLite database
+// TODO: refactor to use interfaces and be testable
+
+// Database represents the SQLite database.
 type Database struct {
 	db *sql.DB
 }
 
-// NewDatabase creates a new database connection
+// NewDatabase creates a new database connection.
 func NewDatabase(dbPath string) (*Database, error) {
-	// Create directory if it doesn't exist
-	dir := filepath.Dir(dbPath)
-	if err := os.MkdirAll(dir, 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0o700); err != nil {
 		return nil, fmt.Errorf("failed to create database directory: %w", err)
 	}
 
-	// Open SQLite database
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+	defer func() {
+		if err = db.Close(); err != nil {
+			log.Printf("failed to close database: %v", err)
+		}
+	}()
 
-	// Test connection
 	if err := db.Ping(); err != nil {
-		db.Close()
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	return &Database{db: db}, nil
 }
 
-// Close closes the database connection
+// Close closes the database connection.
 func (d *Database) Close() error {
 	return d.db.Close()
 }
 
-// Initialize creates the database schema
+// Initialize creates the database schema.
 func (d *Database) Initialize() error {
 	// Create password entries table
 	_, err := d.db.Exec(`
@@ -103,7 +107,7 @@ func (d *Database) Initialize() error {
 	return nil
 }
 
-// SaveVaultMetadata saves vault metadata to the database
+// SaveVaultMetadata saves vault metadata to the database.
 func (d *Database) SaveVaultMetadata(v *vault.Vault) error {
 	// Insert or update vault metadata
 	_, err := d.db.Exec(`
@@ -121,13 +125,17 @@ func (d *Database) SaveVaultMetadata(v *vault.Vault) error {
 	return nil
 }
 
-// SavePasswordEntry saves a password entry to the database
+// SavePasswordEntry saves a password entry to the database.
 func (d *Database) SavePasswordEntry(entry *vault.PasswordEntry) error {
 	tx, err := d.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err = tx.Rollback(); err != nil {
+			log.Printf("failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Insert or update password entry
 	var result sql.Result
@@ -156,11 +164,10 @@ func (d *Database) SavePasswordEntry(entry *vault.PasswordEntry) error {
 
 	// Get ID for new entry
 	if entry.ID == 0 {
-		id, err := result.LastInsertId()
+		entry.ID, err = result.LastInsertId()
 		if err != nil {
 			return fmt.Errorf("failed to get last insert ID: %w", err)
 		}
-		entry.ID = id
 	}
 
 	// Delete existing tags
@@ -183,7 +190,7 @@ func (d *Database) SavePasswordEntry(entry *vault.PasswordEntry) error {
 	return tx.Commit()
 }
 
-// GetPasswordEntry retrieves a password entry by service name
+// GetPasswordEntry retrieves a password entry by service name.
 func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error) {
 	var entry vault.PasswordEntry
 
@@ -208,7 +215,11 @@ func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error
 	if err != nil {
 		return nil, fmt.Errorf("failed to query tags: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var tags []string
 	for rows.Next() {
@@ -219,12 +230,16 @@ func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error
 		tags = append(tags, tag)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate tags: %w", err)
+	}
+
 	entry.Tags = tags
 
 	return &entry, nil
 }
 
-// ListPasswordEntries lists all password entries
+// ListPasswordEntries lists all password entries.
 func (d *Database) ListPasswordEntries() ([]vault.PasswordEntry, error) {
 	// Get password entries
 	rows, err := d.db.Query(`
@@ -235,12 +250,16 @@ func (d *Database) ListPasswordEntries() ([]vault.PasswordEntry, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to query password entries: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err = rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
 
 	var entries []vault.PasswordEntry
 	for rows.Next() {
 		var entry vault.PasswordEntry
-		if err := rows.Scan(
+		if err = rows.Scan(
 			&entry.ID, &entry.Service, &entry.Username, &entry.Password, &entry.URL, &entry.Notes,
 			&entry.CreatedAt, &entry.ModifiedAt, &entry.LastUsedAt,
 		); err != nil {
@@ -248,39 +267,60 @@ func (d *Database) ListPasswordEntries() ([]vault.PasswordEntry, error) {
 		}
 		entries = append(entries, entry)
 	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate password_entries: %w", err)
+	}
 
 	// Get tags for each entry
 	for i := range entries {
-		tagRows, err := d.db.Query("SELECT tag FROM tags WHERE entry_id = ?", entries[i].ID)
+		entries[i].Tags, err = d.getTags(entries[i].ID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to query tags: %w", err)
+			return nil, fmt.Errorf("failed to get tags: %w", err)
 		}
-
-		var tags []string
-		for tagRows.Next() {
-			var tag string
-			if err := tagRows.Scan(&tag); err != nil {
-				tagRows.Close()
-				return nil, fmt.Errorf("failed to scan tag: %w", err)
-			}
-			tags = append(tags, tag)
-		}
-		tagRows.Close()
-
-		entries[i].Tags = tags
 	}
 
 	return entries, nil
 }
 
-// DeletePasswordEntry deletes a password entry by service name
+func (d *Database) getTags(entryID int64) ([]string, error) {
+	rows, err := d.db.Query("SELECT tag FROM tags WHERE entry_id = ?", entryID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tags: %w", err)
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("failed to close rows: %v", err)
+		}
+	}()
+
+	var tags []string
+	for rows.Next() {
+		var tag string
+		if err := rows.Scan(&tag); err != nil {
+			return nil, fmt.Errorf("failed to scan tag: %w", err)
+		}
+		tags = append(tags, tag)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("failed to query tags: %w", rows.Err())
+	}
+
+	return tags, nil
+}
+
+// DeletePasswordEntry deletes a password entry by service name.
 func (d *Database) DeletePasswordEntry(service string) error {
 	// Start transaction
 	tx, err := d.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err = tx.Rollback(); err != nil {
+			log.Printf("failed to rollback transaction: %v", err)
+		}
+	}()
 
 	// Get entry ID
 	var id int64

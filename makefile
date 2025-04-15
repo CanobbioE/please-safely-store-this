@@ -18,8 +18,12 @@ fieldalignment:
 	fieldalignment -fix -test=false ./...
 
 lint:
-	@echo "Checking code against linters..."
+	@echo "Checking code changes against linters..."
 	@golangci-lint run --new-from-rev=$$(git merge-base HEAD master) --timeout 6m0s ./...
+
+lint-all:
+	@echo "Checking code against linters..."
+	@golangci-lint run --fix --timeout 6m0s ./...
 
 gci:
 	@echo "Fixing imports with gci..."

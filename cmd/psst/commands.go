@@ -3,6 +3,8 @@ package psst
 import (
 	"log"
 
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/db"
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 	"github.com/spf13/cobra"
 )
 
@@ -25,17 +27,42 @@ func AddCmd() *cobra.Command {
 			tags, _ := cmd.Flags().GetStringSlice("tags")
 
 			// TODO:
-			// connect to db
-			// check if service already exists
-			// If password flag not set, prompt for password
-			// Check password strength if configured
-			// Create new password entry
-			// Save to database
-			// If configured to show tags, display them
+			// connect to repo
+			repo, err := db.NewDatabase(cfg.DBPath)
+			if err != nil {
+				log.Printf("Failed to connect to local db: %v\n", err)
+				return
+			}
 
+			// check if service already exists
+			vaultPwdEntry, err := repo.GetPasswordEntry(service)
+			if err != nil && !db.IsNotFoundError(err) {
+				log.Printf("Failed to get existing password entry: %v\n", err)
+				return
+			}
+
+			if vaultPwdEntry != nil {
+				log.Println("Vault entry for service " + service + " already exists")
+				return
+			}
+
+			// TODO: If password flag not set, prompt for password
 			if password == "" {
 				log.Println("Password flag not set. Interactive password entry will be implemented in Phase 3.")
 				return
+			}
+
+			// Check password strength if configured
+			if len(password) < cfg.MinPasswordStrength {
+				log.Println("Password does not match minum strength requirements")
+				return
+			}
+
+			// TODO: notes and url
+			// Create and save new password entry
+			err = repo.SavePasswordEntry(vault.NewPasswordEntry(service, username, password, "", "", tags))
+			if err != nil {
+				log.Printf("Failed to store password entry: %v\n", err)
 			}
 
 			log.Printf("Adding password for service: %s, username: %s (Implementation pending)\n", service, username)

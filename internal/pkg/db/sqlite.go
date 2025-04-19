@@ -204,9 +204,6 @@ func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error
 		&entry.CreatedAt, &entry.ModifiedAt, &entry.LastUsedAt,
 	)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, fmt.Errorf("failed to get password entry: %w", err)
 	}
 

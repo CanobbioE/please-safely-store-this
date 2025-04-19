@@ -86,3 +86,17 @@ func (v *Vault) DeleteEntry(service string) bool {
 	}
 	return false
 }
+
+// NewPasswordEntry creates a new entry from the given parameters.
+func NewPasswordEntry(service, username, password, url, notes string, tags []string) *PasswordEntry {
+	return &PasswordEntry{
+		CreatedAt:  time.Now().UTC(),
+		ModifiedAt: time.Now().UTC(),
+		Service:    service,
+		Username:   username,
+		Password:   password,
+		URL:        url,
+		Notes:      notes,
+		Tags:       tags,
+	}
+}

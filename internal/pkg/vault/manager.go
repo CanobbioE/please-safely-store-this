@@ -13,7 +13,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/CanobbioE/please-safely-store-this/internal/pkg/db"
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/model"
 )
 
@@ -25,31 +24,47 @@ import (
 // The vault status can be checked by calling IsUnlocked(), the status can be changed by calling Lock() or Unlock().
 // Locking the vault manager is useful when the vault manager is no longer needed.
 type Manager struct {
-	database   *db.Database
+	vault      Vault
 	meta       *model.VaultMetadata
 	masterKey  []byte
 	isUnlocked bool
+}
+
+// Vault defines the methods to perform CRUD operations on the underlying database.
+// It is implemented by db.Database.
+type Vault interface {
+	// SavePasswordEntry creates or updates a new password entry to the vault.
+	SavePasswordEntry(entry *model.PasswordEntry) error
+	// GetPasswordEntry retrieves a password entry from the vault.
+	GetPasswordEntry(service string) (*model.PasswordEntry, error)
+	// ListPasswordEntries retrieves all password entries from the vault.
+	ListPasswordEntries() ([]*model.PasswordEntry, error)
+	// DeletePasswordEntry deletes a password entry from the vault.
+	DeletePasswordEntry(service string) error
+	// SaveVaultMetadata creates or updates the vault metadata.
+	SaveVaultMetadata(v *model.VaultMetadata) error
+	// GetVaultMetadata retrieves the vault metadata.
+	GetVaultMetadata() (*model.VaultMetadata, error)
+	// Initialize the vault.
+	Initialize() error
+	// Close the vault and the underlying database connection.
+	Close() error
 }
 
 // NewManager creates a new vault manager without initializing it.
 // If the vault manager has been already initialized, the Manager can be used after Unlock() has been called.
 // If the vault manager has not been initialised, Init() must be called before any other method.
 // Please remember to Close() the vault Manager.
-func NewManager(dbPath string) (*Manager, error) {
-	// TODO: pass the db as a dependency interface.
-	repo, err := db.NewDatabase(dbPath)
-	if err != nil {
-		return nil, fmt.Errorf("error creating database: %w", err)
-	}
+func NewManager(db Vault) *Manager {
 	return &Manager{
-		database: repo,
-	}, nil
+		vault: db,
+	}
 }
 
 // Close closes and locks (see Lock()) the vault and the underlying database connection.
 // The vault can no longer be used after Close has been called.
 func (m *Manager) Close() {
-	err := m.database.Close()
+	err := m.vault.Close()
 	if err != nil {
 		log.Printf("Error closing database: %s\n", err)
 	}
@@ -66,7 +81,7 @@ func (m *Manager) Unlock(masterPassword string) (bool, error) {
 	if m.isUnlocked {
 		return true, nil
 	}
-	metadata, err := m.database.GetVaultMetadata()
+	metadata, err := m.vault.GetVaultMetadata()
 	if err != nil {
 		return false, fmt.Errorf("failed to get vault metadata: %w", err)
 	}
@@ -84,12 +99,12 @@ func (m *Manager) Unlock(masterPassword string) (bool, error) {
 
 	// Unlock vault
 	m.meta = metadata
-	metadata.LastAccess = time.Now().UTC()
+	m.meta.LastAccess = time.Now().UTC()
 	m.masterKey = key
 	m.isUnlocked = true
 
 	// Update last access time
-	if err := m.database.SaveVaultMetadata(m.meta); err != nil {
+	if err := m.vault.SaveVaultMetadata(m.meta); err != nil {
 		return true, fmt.Errorf("failed to update last access time: %w", err)
 	}
 
@@ -134,12 +149,12 @@ func (m *Manager) Init(masterPassword string) error {
 	m.isUnlocked = true
 
 	// Initialize database schema
-	if err := m.database.Initialize(); err != nil {
+	if err := m.vault.Initialize(); err != nil {
 		return fmt.Errorf("failed to initialize database schema: %w", err)
 	}
 
 	// Save vault metadata
-	if err := m.database.SaveVaultMetadata(m.meta); err != nil {
+	if err := m.vault.SaveVaultMetadata(m.meta); err != nil {
 		return fmt.Errorf("failed to save vault metadata: %w", err)
 	}
 
@@ -161,7 +176,7 @@ func (m *Manager) Create(entry *model.PasswordEntry) error {
 		return fmt.Errorf("failed to encrypt password: %w", err)
 	}
 
-	err = m.database.SavePasswordEntry(entry)
+	err = m.vault.SavePasswordEntry(entry)
 	if err != nil {
 		return fmt.Errorf("failed to save password entry: %w", err)
 	}
@@ -174,7 +189,7 @@ func (m *Manager) Read(service string) (*model.PasswordEntry, error) {
 		return nil, errors.New("vault is locked, please unlock the vault first")
 	}
 
-	entry, err := m.database.GetPasswordEntry(service)
+	entry, err := m.vault.GetPasswordEntry(service)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get password entry: %w", err)
 	}

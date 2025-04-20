@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/db"
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 )
 
@@ -223,11 +224,12 @@ func InitCmd() *cobra.Command {
 				goto promptPwd
 			}
 
-			vaultManager, err = vault.NewManager(cfg.DBPath)
+			v, err := db.NewDatabase(cfg.DBPath)
 			if err != nil {
-				log.Printf("Error initializing vault: %s\n", err)
+				log.Printf("Error creating db connection: %v\n", err)
 				return
 			}
+			vaultManager = vault.NewManager(v)
 
 			log.Println("Initializing vault...")
 			err = vaultManager.Init(password)
@@ -249,10 +251,11 @@ func initVaultManager() {
 		return
 	}
 
-	var err error
-	vaultManager, err = vault.NewManager(cfg.DBPath)
+	v, err := db.NewDatabase(cfg.DBPath)
 	if err != nil {
-		log.Printf("Error initializing vault: %s\n", err)
+		log.Printf("Error creating DB connection: %v\n", err)
 		return
 	}
+
+	vaultManager = vault.NewManager(v)
 }

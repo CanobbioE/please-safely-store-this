@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/CanobbioE/please-safely-store-this/cmd/psst"
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/config"
 )
 
 // TODO: expand test cases.
@@ -17,6 +18,7 @@ func TestCommands(t *testing.T) {
 		cmd         *cobra.Command
 		args        []string
 		expectedErr string
+		preRun      func(*testing.T)
 	}{
 		{
 			name: "AddCmd successfully adds a password",
@@ -119,11 +121,19 @@ func TestCommands(t *testing.T) {
 		{
 			name: "InitCmd successfully initialize the password vault",
 			cmd:  psst.InitCmd(),
+			preRun: func(t *testing.T) {
+				psst.SetCfg(&config.Config{
+					DBPath: t.TempDir() + "/psst.db",
+				})
+			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.preRun != nil {
+				tt.preRun(t)
+			}
 			tt.cmd.SetArgs(tt.args)
 			err := tt.cmd.Execute()
 			switch {

@@ -9,8 +9,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/model"
 
 	_ "github.com/mattn/go-sqlite3" // blank import here is common practice
 )
@@ -32,11 +33,6 @@ func NewDatabase(dbPath string) (*Database, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-	defer func() {
-		if err = db.Close(); err != nil {
-			log.Printf("failed to close database: %v", err)
-		}
-	}()
 
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
@@ -107,26 +103,8 @@ func (d *Database) Initialize() error {
 	return nil
 }
 
-// SaveVaultMetadata saves vault metadata to the database.
-func (d *Database) SaveVaultMetadata(v *vault.Vault) error {
-	// Insert or update vault metadata
-	_, err := d.db.Exec(`
-        INSERT OR REPLACE INTO vault_metadata (key, value) VALUES 
-        ('master_hash', ?),
-        ('created_at', ?),
-        ('last_access', ?),
-        ('version', ?)
-    `, v.MasterHash, v.CreatedAt, v.LastAccess, v.Version)
-
-	if err != nil {
-		return fmt.Errorf("failed to save vault metadata: %w", err)
-	}
-
-	return nil
-}
-
 // SavePasswordEntry saves a password entry to the database.
-func (d *Database) SavePasswordEntry(entry *vault.PasswordEntry) error {
+func (d *Database) SavePasswordEntry(entry *model.PasswordEntry) error {
 	tx, err := d.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
@@ -191,8 +169,8 @@ func (d *Database) SavePasswordEntry(entry *vault.PasswordEntry) error {
 }
 
 // GetPasswordEntry retrieves a password entry by service name.
-func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error) {
-	var entry vault.PasswordEntry
+func (d *Database) GetPasswordEntry(service string) (*model.PasswordEntry, error) {
+	var entry model.PasswordEntry
 
 	// Get password entry
 	err := d.db.QueryRow(`
@@ -240,7 +218,7 @@ func (d *Database) GetPasswordEntry(service string) (*vault.PasswordEntry, error
 }
 
 // ListPasswordEntries lists all password entries.
-func (d *Database) ListPasswordEntries() ([]vault.PasswordEntry, error) {
+func (d *Database) ListPasswordEntries() ([]model.PasswordEntry, error) {
 	// Get password entries
 	rows, err := d.db.Query(`
         SELECT id, service, username, password, url, notes, created_at, modified_at, last_used_at
@@ -256,9 +234,9 @@ func (d *Database) ListPasswordEntries() ([]vault.PasswordEntry, error) {
 		}
 	}()
 
-	var entries []vault.PasswordEntry
+	var entries []model.PasswordEntry
 	for rows.Next() {
-		var entry vault.PasswordEntry
+		var entry model.PasswordEntry
 		if err = rows.Scan(
 			&entry.ID, &entry.Service, &entry.Username, &entry.Password, &entry.URL, &entry.Notes,
 			&entry.CreatedAt, &entry.ModifiedAt, &entry.LastUsedAt,
@@ -345,4 +323,62 @@ func (d *Database) DeletePasswordEntry(service string) error {
 	}
 
 	return tx.Commit()
+}
+
+// SaveVaultMetadata saves vault metadata to the database.
+func (d *Database) SaveVaultMetadata(v *model.VaultMetadata) error {
+	// Insert or update vault metadata
+	_, err := d.db.Exec(`
+        INSERT OR REPLACE INTO vault_metadata (key, value) VALUES 
+        ('master_hash', ?),
+        ('created_at', ?),
+        ('last_access', ?),
+        ('version', ?)
+    `, v.MasterHash, v.CreatedAt, v.LastAccess, v.Version)
+
+	if err != nil {
+		return fmt.Errorf("failed to save vault metadata: %w", err)
+	}
+
+	return nil
+}
+
+// GetVaultMetadata retrieves vault metadata from the database.
+func (d *Database) GetVaultMetadata() (*model.VaultMetadata, error) {
+	var metadata model.VaultMetadata
+	var createdAtStr, lastAccessStr string
+
+	// Get master hash
+	err := d.db.QueryRow("SELECT value FROM vault_metadata WHERE key = 'master_hash'").Scan(&metadata.MasterHash)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get master hash: %w", err)
+	}
+
+	// Get created_at
+	err = d.db.QueryRow("SELECT value FROM vault_metadata WHERE key = 'created_at'").Scan(&createdAtStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get created_at: %w", err)
+	}
+	metadata.CreatedAt, err = time.Parse(time.RFC3339, createdAtStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse created_at: %w", err)
+	}
+
+	// Get last_access
+	err = d.db.QueryRow("SELECT value FROM vault_metadata WHERE key = 'last_access'").Scan(&lastAccessStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get last_access: %w", err)
+	}
+	metadata.LastAccess, err = time.Parse(time.RFC3339, lastAccessStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse last_access: %w", err)
+	}
+
+	// Get version
+	err = d.db.QueryRow("SELECT value FROM vault_metadata WHERE key = 'version'").Scan(&metadata.Version)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get version: %w", err)
+	}
+
+	return &metadata, nil
 }

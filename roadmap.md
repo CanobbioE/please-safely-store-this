@@ -19,21 +19,21 @@
 
 ## Phase 2: Storage & Encryption
 
-- [ ] Implement Master Password Handling
-    - [ ] Password hashing with Argon2id
-    - [ ] Salt generation and storage
-    - [ ] Master password validation
+- [x] Implement Master Password Handling
+    - [x] Password hashing with Argon2id
+    - [x] Salt generation and storage
+    - [x] Master password validation
 
-- [ ] Create Vault Encryption
-    - [ ] Implement AES-256-GCM encryption
-    - [ ] Setup key derivation from master password
-    - [ ] Create encrypted storage file format
+- [x] Create Vault Encryption
+    - [x] Implement AES-256-GCM encryption
+    - [x] Setup key derivation from master password
+    - [x] Create encrypted storage file format
 
-- [ ] Basic Database Operations
-    - [ ] Create new vault
-    - [ ] Open existing vault
-    - [ ] Save/close vault
-    - [ ] Error handling for file operations
+- [x] Basic Database Operations
+    - [x] Create new vault
+    - [x] Open existing vault
+    - [x] Save/close vault
+    - [x] Error handling for file operations
 
 
 ## Phase 3: Core Password Management Features

@@ -7,7 +7,7 @@ current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
 
 USER_GROUP := $(if $(USER), $$(id -u ${USER}):$$(id -g ${USER}) , 0:0)
 
-default:
+default:z
 
 fmt:
 	@echo "Fixing code with gofmt..."
@@ -17,11 +17,11 @@ fieldalignment:
 	@echo "Analyzer structs and rearranged to use less memory with fieldalignment..."
 	fieldalignment -fix -test=false ./...
 
-lint:
+lint-diff:
 	@echo "Checking code changes against linters..."
 	@golangci-lint run --new-from-rev=$$(git merge-base HEAD master) --timeout 6m0s ./...
 
-lint-all:
+lint:
 	@echo "Checking code against linters..."
 	@golangci-lint run --fix --timeout 6m0s ./...
 

@@ -9,10 +9,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/config"
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 )
 
 var cfgFile string
-
+var vaultManager *vault.Manager
 var cfg *config.Config
 
 // RootCmd represents the base command when called without any subcommands.
@@ -36,11 +37,16 @@ except when you explicitly export them.`,
 	return cmd
 }
 
+// SetCfg sets the config for the application.
+// This is used for testing purposes.
+func SetCfg(c *config.Config) {
+	cfg = c
+}
+
 func initConfig() {
-	// If config file is specified, use it
+	// If a config file is specified, use it
 	if cfgFile != "" {
 		cfg = config.LoadConfig(cfgFile)
-		log.Printf("Using config: %+v", cfg) // TODO: remove
 		return
 	}
 
@@ -54,7 +60,7 @@ func initConfig() {
 	configDir := filepath.Join(home, ".psst")
 	configPath := filepath.Join(configDir, "config.yaml")
 
-	// Create config directory if it doesn't exist
+	// Create the config directory if it doesn't exist
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
 		err := os.MkdirAll(configDir, 0o700)
 		if err != nil {

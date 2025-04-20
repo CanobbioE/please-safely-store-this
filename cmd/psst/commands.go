@@ -1,12 +1,22 @@
 package psst
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"strings"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
+
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 )
 
 // TODO: use custom logger instead of log.Print
+
+// minPrincipalPasswordLength is the minimum length of the principal password.
+const minPrincipalPasswordLength = 8
 
 // AddCmd adds a new password entry to the vault.
 func AddCmd() *cobra.Command {
@@ -152,16 +162,97 @@ func DeleteCmd() *cobra.Command {
 	return deleteCmd
 }
 
-// InitCmd initializes a new password vault with a master password.
+// InitCmd initializes a new password vault with a principal password.
 func InitCmd() *cobra.Command {
 	initCmd := &cobra.Command{
 		Use:   "init",
 		Short: "Initialize the password vault",
-		Long:  `Initialize a new password vault with a master password.`,
+		Long:  `Initialize a new password vault with a principal password.`,
 		Run: func(_ *cobra.Command, _ []string) {
-			log.Println("Initializing new password vault (Implementation pending)")
+			initVaultManager()
+			defer vaultManager.Close()
+			readPwd := func(prompt string) string {
+				log.Print(prompt)
+				p, err := term.ReadPassword(syscall.Stdin)
+				if err != nil {
+					log.Printf("Error reading password: %s\n", err)
+					return ""
+				}
+				log.Println()
+				return string(p)
+			}
+
+			// If the vault already exists, prompt for confirmation to overwrite it.
+			_, err := os.Stat(cfg.DBPath)
+			if err != nil && !os.IsNotExist(err) {
+				log.Printf("Error checking vault file: %s\n", err)
+				return
+			}
+			if !os.IsNotExist(err) {
+				log.Printf("Vault already exists at %s. Do you want to overwrite it? [y/N] ", cfg.DBPath)
+				var confirm string
+				_, err = fmt.Scanln(&confirm)
+				if err != nil {
+					log.Printf("Error reading confirmation: %s\n", err)
+					return
+				}
+				if !strings.EqualFold(confirm, "y") {
+					log.Println("Initialization cancelled.")
+					return
+				}
+				log.Println("Removing existing vault...")
+				// Remove existing vault
+				if err = os.Remove(cfg.DBPath); err != nil {
+					log.Printf("Error removing existing vault: %s\n", err)
+					return
+				}
+			}
+
+			// Prompt for the principal password and confirm it
+			// Retry until the password is at least 8 characters long and matches the confirmation
+		promptPwd:
+			password := readPwd("Enter principal password: ")
+			if len(password) < minPrincipalPasswordLength {
+				log.Printf("Password must be at least %d characters long!\n", minPrincipalPasswordLength)
+				goto promptPwd
+			}
+
+			confirmPassword := readPwd("Confirm principal password: ")
+			if password != confirmPassword {
+				log.Println("Passwords do not match! Please try again.")
+				goto promptPwd
+			}
+
+			vaultManager, err = vault.NewManager(cfg.DBPath)
+			if err != nil {
+				log.Printf("Error initializing vault: %s\n", err)
+				return
+			}
+
+			log.Println("Initializing vault...")
+			err = vaultManager.Init(password)
+			if err != nil {
+				log.Printf("Error initializing vault: %s\n", err)
+				return
+			}
+			log.Println("Vault initialized successfully with the given principal password.")
+			log.Println("Please make sure to store the principal password somewhere safe.")
+			log.Println("You can now add passwords to the vault using the 'add' command.")
 		},
 	}
 
 	return initCmd
+}
+
+func initVaultManager() {
+	if vaultManager != nil {
+		return
+	}
+
+	var err error
+	vaultManager, err = vault.NewManager(cfg.DBPath)
+	if err != nil {
+		log.Printf("Error initializing vault: %s\n", err)
+		return
+	}
 }

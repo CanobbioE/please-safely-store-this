@@ -16,8 +16,6 @@ import (
 	_ "github.com/mattn/go-sqlite3" // blank import here is common practice
 )
 
-// TODO: refactor to use interfaces and be testable
-
 // Database represents the SQLite database.
 type Database struct {
 	db *sql.DB
@@ -218,7 +216,7 @@ func (d *Database) GetPasswordEntry(service string) (*model.PasswordEntry, error
 }
 
 // ListPasswordEntries lists all password entries.
-func (d *Database) ListPasswordEntries() ([]model.PasswordEntry, error) {
+func (d *Database) ListPasswordEntries() ([]*model.PasswordEntry, error) {
 	// Get password entries
 	rows, err := d.db.Query(`
         SELECT id, service, username, password, url, notes, created_at, modified_at, last_used_at
@@ -234,7 +232,7 @@ func (d *Database) ListPasswordEntries() ([]model.PasswordEntry, error) {
 		}
 	}()
 
-	var entries []model.PasswordEntry
+	var entries []*model.PasswordEntry
 	for rows.Next() {
 		var entry model.PasswordEntry
 		if err = rows.Scan(
@@ -243,7 +241,7 @@ func (d *Database) ListPasswordEntries() ([]model.PasswordEntry, error) {
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan password entry: %w", err)
 		}
-		entries = append(entries, entry)
+		entries = append(entries, &entry)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("failed to iterate password_entries: %w", err)

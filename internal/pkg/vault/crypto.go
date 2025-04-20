@@ -4,9 +4,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
+
+const argon2idAlgorithm = "argon2id"
 
 // Hash parts.
 type hashParts struct {
@@ -28,7 +31,8 @@ func hashPassword(password string, salt []byte) (hash string, key []byte) {
 	keyLen := uint32(32)        // 32 bytes (256 bits)
 
 	key = argon2.IDKey([]byte(password), salt, time, memory, threads, keyLen)
-	hash = fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s",
+	hash = fmt.Sprintf("$%s$v=%d$m=%d,t=%d,p=%d$%s$%s",
+		argon2idAlgorithm,
 		argon2.Version, memory, time, threads,
 		hex.EncodeToString(salt),
 		hex.EncodeToString(key))
@@ -53,13 +57,14 @@ func verifyPassword(password, encodedHash string) bool {
 
 // splitHash splits an encoded hash into its parts.
 func splitHash(encodedHash string) *hashParts {
-	// Example: $argon2id$v=19$m=65536,t=3,p=4$salt$hash
-	fields := splitString(encodedHash, '$')
+	// Example:
+	// $argon2id$v=19$m=65536,t=3,p=4$salt$hash
+	fields := strings.Split(encodedHash, "$")
 	if len(fields) != 6 {
 		return nil
 	}
 
-	if fields[1] != "argon2id" {
+	if fields[1] != argon2idAlgorithm {
 		return nil
 	}
 
@@ -87,7 +92,7 @@ func splitHash(encodedHash string) *hashParts {
 	}
 
 	return &hashParts{
-		algorithm: "argon2id",
+		algorithm: argon2idAlgorithm,
 		version:   version,
 		memory:    memory,
 		time:      time,
@@ -95,22 +100,4 @@ func splitHash(encodedHash string) *hashParts {
 		salt:      salt,
 		hash:      hash,
 	}
-}
-
-// splitString splits a string by a separator but without empty elements.
-func splitString(s string, sep byte) []string {
-	parts := make([]string, 0, 8)
-	start := 0
-	for i := range len(s) {
-		if s[i] == sep {
-			if i > start {
-				parts = append(parts, s[start:i])
-			}
-			start = i + 1
-		}
-	}
-	if start < len(s) {
-		parts = append(parts, s[start:])
-	}
-	return parts
 }

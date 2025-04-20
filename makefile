@@ -29,9 +29,16 @@ gci:
 	@echo "Fixing imports with gci..."
 	@gci write -s standard -s default -s "prefix(github.com/CanobbioE/please-safely-store-this)" -s blank -s dot ./cmd ./internal
 
+mock: _gen-mock fmt gci lint
+
+_gen-mock:
+	@echo "Generating Mocks..."
+	cd internal/pkg/test && go generate
+
 install-tools:
 	@echo "Installing tools..."
 	@go install github.com/daixiang0/gci@latest
 	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest
 	@go install golang.org/x/tools/go/analysis/passes/fieldalignment/cmd/fieldalignment@latest
+	@go install go.uber.org/mock/mockgen@v0.4.0
 	@echo "Installation completed!"

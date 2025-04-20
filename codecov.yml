@@ -1,3 +1,4 @@
 ignore:
-  - "*root.go"
-  - "*main.go"
+  - "cmd/psst/root.go"
+  - "main.go"
+  - "pkg/internal/test/"

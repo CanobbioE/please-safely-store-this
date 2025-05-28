@@ -1,13 +1,8 @@
-.PHONY: test
+.PHONY:
 GO111MODULE=on
 PKG_NAME=.
 
-mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
-current_dir := $(patsubst %/,%,$(dir $(mkfile_path)))
-
-USER_GROUP := $(if $(USER), $$(id -u ${USER}):$$(id -g ${USER}) , 0:0)
-
-default:z
+default:
 
 fmt:
 	@echo "Fixing code with gofmt..."

@@ -11,6 +11,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/db"
+	"github.com/CanobbioE/please-safely-store-this/internal/pkg/model"
 	"github.com/CanobbioE/please-safely-store-this/internal/pkg/vault"
 )
 
@@ -108,25 +109,58 @@ func UpdateCmd() *cobra.Command {
 		Short: "Update an existing password",
 		Long:  `Update an existing password in the vault.`,
 		Run: func(cmd *cobra.Command, _ []string) {
+			initVaultManager()
+			defer vaultManager.Close()
+
 			service, _ := cmd.Flags().GetString("service")
 			if service == "" {
 				log.Println("Error: Service name required")
 				return
 			}
+			username, _ := cmd.Flags().GetString("username")
 			password, _ := cmd.Flags().GetString("password")
 			if password == "" {
 				log.Println("Password flag not set. Interactive password entry will be implemented in Phase 3.")
 				return
 			}
 
-			log.Printf("Updating password for service: %s (Implementation pending)\n", service)
+			if !vaultManager.IsUnlocked() {
+				log.Println("Vault is locked, provide principal key")
+
+				principalPassword, err := term.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					log.Printf("Error reading princiapl password: %v\n", err)
+					return
+				}
+
+				isUnlocked, err := vaultManager.Unlock(string(principalPassword))
+				switch {
+				case err != nil:
+					log.Printf("Failed to open vault: %v\n", err)
+					return
+				case !isUnlocked:
+					log.Println("Invalid password.")
+					return
+				case isUnlocked:
+					log.Println("Vault successfully unlocked.")
+				}
+			}
+
+			err := vaultManager.Create(&model.PasswordEntry{
+				Service:  service,
+				Username: username,
+				Password: password,
+			})
+			if err != nil {
+				log.Printf("Error creating password entry: %v\n", err)
+				return
+			}
+
+			log.Printf("Sucessfully created vault entry for servive: %s\n", service)
 			// TODO:
-			// connect to db
 			// check if service exists
 			// If password flag not set, prompt for password
 			// Check password strength if configured
-			// Create new password entry
-			// Save to database
 			// If configured to show tags, display them
 		},
 	}
